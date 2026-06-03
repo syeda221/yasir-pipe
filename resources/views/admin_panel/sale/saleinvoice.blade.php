@@ -472,26 +472,35 @@
                         </tr>
                         @endif
 
-                        <tr style="border-bottom: 2px solid #eee;">
-                            <td class="text-muted">Prev Bal</td>
-                            <td class="text-end text-muted">
-                                {{ number_format(abs($previousBalance), 2) }}
-                                <small>{{ $previousBalance >= 0 ? 'Dr' : 'Cr' }}</small>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>Current Bill</td>
-                            <td class="text-end">
-                                {{ number_format($netBill, 2) }}
-                            </td>
-                        </tr>
-                        <tr class="total-row" style="background-color: #e9ecef;">
-                            <td>Total</td>
-                            <td class="text-end">
-                                {{ number_format(abs($previousBalance + $netBill), 2) }}
-                                <small>{{ ($previousBalance + $netBill) >= 0 ? 'Dr' : 'Cr' }}</small>
-                            </td>
-                        </tr>
+                        @if (round(abs($previousBalance), 2) > 0)
+                            <tr style="border-bottom: 2px solid #eee;">
+                                <td class="text-muted">Prev Bal</td>
+                                <td class="text-end text-muted">
+                                    {{ number_format(abs($previousBalance), 2) }}
+                                    <small>{{ $previousBalance >= 0 ? 'Dr' : 'Cr' }}</small>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Current Bill</td>
+                                <td class="text-end">
+                                    {{ number_format($netBill, 2) }}
+                                </td>
+                            </tr>
+                            <tr class="total-row" style="background-color: #e9ecef;">
+                                <td>Total</td>
+                                <td class="text-end">
+                                    {{ number_format(abs($previousBalance + $netBill), 2) }}
+                                    <small>{{ ($previousBalance + $netBill) >= 0 ? 'Dr' : 'Cr' }}</small>
+                                </td>
+                            </tr>
+                        @else
+                            <tr class="total-row" style="background-color: #e9ecef;">
+                                <td>Total Bill</td>
+                                <td class="text-end">
+                                    {{ number_format($netBill, 2) }}
+                                </td>
+                            </tr>
+                        @endif
                         <tr>
                             <td>Paid</td>
                             <td class="text-end text-success">{{ number_format($paidAmount, 2) }}</td>

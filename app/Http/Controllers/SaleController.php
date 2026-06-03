@@ -829,10 +829,10 @@ class SaleController extends Controller
         $currentBalance = 0;
 
         // Find the Journal Entry for this Sale (Debit side)
-        // We look for where source is Sale and it's a Debit (Customer side)
-        $journalEntry = \App\Models\JournalEntry::where('source_type', \App\Models\Sale::class)
-            ->where('source_id', $sale->id)
-            ->where('debit', '>', 0) // The debit to customer
+        // We look for the entry by its description which matches the invoice number
+        $journalEntry = \App\Models\JournalEntry::where('party_type', \App\Models\Customer::class)
+            ->where('party_id', $sale->customer_id)
+            ->where('description', "Sale Invoice #{$sale->invoice_no}")
             ->first();
 
         if ($journalEntry && $sale->customer_id) {
@@ -841,19 +841,17 @@ class SaleController extends Controller
                 ->where('party_id', $sale->customer_id)
                 ->where('id', '<', $journalEntry->id)
                 ->sum(\Illuminate\Support\Facades\DB::raw('debit - credit'));
-
-            // Current Balance (after this bill, before payment if payment is separate)
-            $currentBalance = $previousBalance + $sale->total_net;
-
-            // Note: If payment was made, it's usually a separate receipt voucher (even if immediate).
-            // So "Current Balance" here naturally excludes the payment unless we look for payment next.
-            // But the user wants "Previous Bal +/- Current Amount = Net".
         } else {
-            // Fallback if no journal entry (legacy or draft)
-            $customer = $sale->customer_relation;
-            $previousBalance = $customer->opening_balance ?? 0;
-            // This is an estimate if we can't find the entry
+            // Fallback if no journal entry (not posted yet)
+            // The customer's current balance is effectively the previous balance before this sale is posted
+            if ($sale->customer_id) {
+                $balanceService = app(\App\Services\BalanceService::class);
+                $previousBalance = $balanceService->getCustomerBalance($sale->customer_id);
+            } else {
+                $previousBalance = 0;
+            }
         }
+        $currentBalance = $previousBalance + $sale->total_net;
 
         return view('admin_panel.sale.saleinvoice', [
             'sale' => $sale,
@@ -919,9 +917,9 @@ class SaleController extends Controller
         $items = $this->_getSaleItems($sale);
 
         // Logic for Previous Balance (copied from saleinvoice)
-        $journalEntry = \App\Models\JournalEntry::where('source_type', \App\Models\Sale::class)
-            ->where('source_id', $sale->id)
-            ->where('debit', '>', 0) // The debit to customer
+        $journalEntry = \App\Models\JournalEntry::where('party_type', \App\Models\Customer::class)
+            ->where('party_id', $sale->customer_id)
+            ->where('description', "Sale Invoice #{$sale->invoice_no}")
             ->first();
 
         $previousBalance = 0;
@@ -933,18 +931,14 @@ class SaleController extends Controller
                 ->where('party_id', $sale->customer_id)
                 ->where('id', '<', $journalEntry->id)
                 ->sum(\Illuminate\Support\Facades\DB::raw('debit - credit'));
-
-            // Current Balance
-            $currentBalance = $previousBalance + $sale->total_net;
         } else {
             // Fallback if no journal entry (legacy or draft)
-            $customer = $sale->customer_relation;
-            if ($customer) {
-                // Try to get balance from ledger or master (simplified fallback)
-                $previousBalance = $customer->previous_balance ?? 0;
+            if ($sale->customer_id) {
+                $balanceService = app(\App\Services\BalanceService::class);
+                $previousBalance = $balanceService->getCustomerBalance($sale->customer_id);
             }
-            $currentBalance = $previousBalance + $sale->total_net;
         }
+        $currentBalance = $previousBalance + $sale->total_net;
 
         return view('admin_panel.sale.salereceipt', [
             'sale' => $sale,
