@@ -772,7 +772,7 @@
                         <p class="page-subtitle">Manage user roles and their permissions</p>
                     </div>
                     @can('roles.create')
-                        <button type="button" class="btn btn-create-role" data-bs-toggle="modal" data-bs-target="#roleModal"
+                        <button type="button" class="btn btn-create-role" data-toggle="modal" data-target="#roleModal"
                             id="createRoleBtn">
                             <i class="fa fa-plus"></i> Create Role
                         </button>
@@ -892,7 +892,9 @@
                         <i class="fa fa-user-shield"></i>
                         <span>Create New Role</span>
                     </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
                 </div>
                 <form id="roleForm" action="{{ route('roles.store') }}" method="POST">
                     @csrf
@@ -914,7 +916,7 @@
                     </div>
 
                     <div class="modal-footer-modern">
-                        <button type="button" class="btn btn-cancel" data-bs-dismiss="modal">
+                        <button type="button" class="btn btn-cancel" data-dismiss="modal">
                             <i class="fa fa-times me-2"></i>Cancel
                         </button>
                         <button type="submit" class="btn btn-save">
@@ -939,7 +941,9 @@
                         </h5>
                         <small class="text-white-50 mt-1" id="permRoleName">Role: Super Admin</small>
                     </div>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
                 </div>
                 <div class="modal-body" style="max-height: 70vh; overflow-y: auto; background: #f8fafc;">
                     <form id="permissionForm" action="{{ route('roles.update.permission') }}" method="POST">
@@ -974,7 +978,7 @@
                     </form>
                 </div>
                 <div class="modal-footer-modern">
-                    <button type="button" class="btn btn-cancel" data-bs-dismiss="modal">
+                    <button type="button" class="btn btn-cancel" data-dismiss="modal">
                         <i class="fa fa-times me-2"></i>Cancel
                     </button>
                     <button type="submit" form="permissionForm" class="btn btn-save">
@@ -995,6 +999,13 @@
         const allPermissions = @json($allPermissions);
 
         $(document).ready(function() {
+            // Fix ARIA focus warning on modal close
+            $('.modal').on('hide.bs.modal', function () {
+                if (document.activeElement) {
+                    document.activeElement.blur();
+                }
+            });
+
             // Create Role Button
             $('#createRoleBtn').click(function() {
                 $('#roleEditId').val('');
