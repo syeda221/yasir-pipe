@@ -42,6 +42,7 @@ class AllModulesPermissionsSeeder extends Seeder
             'customers',
             'customer.ledger',
             'bookings',
+            'checkbook',
 
             'chart.of.accounts',
             'expense.voucher',
